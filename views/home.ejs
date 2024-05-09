@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Redirect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        body {
+            background-color: #e6e6e6;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: "Poppins", sans-serif;
+        }
+
+        main {
+            text-align: center;
+        }
+
+        a {
+            background-color: white;
+            padding: 25px;
+            border-radius: 0.5em;
+            color: black;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        a:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+            max-width: 300px;
+        }
+
+        .user-card img {
+            width: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .user-card p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a href="#" onclick="handleSignInRedirect()">Entrar com Conta Google <i class="fab fa-google"></i></a>
+        <div class="user-card" id="userCard" style="display: none;">
+            <img id="userImage" src="" alt="User Image">
+            <p id="userName"></p>
+            <p id="userEmail"></p>
+        </div>
+    </main>
+
+    <script>
+        const CLIENT_ID = '667715389264-rspkefli408cc862civnqt78s2qdpkoq.apps.googleusercontent.com';
+        const REDIRECT_URI = 'http://localhost:3000';
+        const SCOPES = 'profile email';
+
+        function handleSignInRedirect() {
+            const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token`;
+            window.location.href = authUrl;
+        }
+
+        function displayUserDetails() {
+            const hashParams = window.location.hash.substr(1).split('&').reduce(function (result, item) {
+                const parts = item.split('=');
+                result[parts[0]] = decodeURIComponent(parts[1]);
+                return result;
+            }, {});
+
+            if (hashParams.access_token) {
+                fetch(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${hashParams.access_token}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const userCard = document.getElementById('userCard');
+                        const userImage = document.getElementById('userImage');
+                        const userName = document.getElementById('userName');
+                        const userEmail = document.getElementById('userEmail');
+
+                        userImage.src = data.picture;
+                        userName.textContent = `Nome: ${data.name}`;
+                        userEmail.textContent = `Email: ${data.email}`;
+                        userCard.style.display = 'block';
+                    })
+                    .catch(error => console.error(error));
+            }
+        }
+
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+            displayUserDetails();
+        }
+    </script>
+</body>
+</html>
